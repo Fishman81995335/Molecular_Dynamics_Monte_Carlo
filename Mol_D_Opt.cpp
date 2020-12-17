@@ -43,6 +43,7 @@ struct Ranq1 {
     inline Doub doub() { return 5.42101086242752217E-20 * int64(); }
     inline Uint int32() { return (Uint)int64(); }
 };
+Ranq1 rng(17);
 //-------------------------------------------//
 
 
@@ -55,7 +56,7 @@ double get_E(double r_sqrd){
   return 4*(1/(r_sqrd*r_sqrd*r_sqrd)*((1/(r_sqrd*r_sqrd*r_sqrd))-1));
 }
 
-void update_energy(Ranq1 rng, vector< vector<double> >* E, int atom,
+void update_energy(vector< vector<double> >* E, int atom,
                     double* x, double* xnew, double* y, double* ynew,
                     double* z, double* znew){
                       
@@ -128,21 +129,32 @@ int main(){
   //declare functions
   double get_r_sqrd(double x1,double x2,double y1,double y2,double z1,double z2);
   double get_E(double r_sqrd);
-  void update_energy(Ranq1 rng, vector< vector<double> >* E, int atom,
+  void update_energy(vector< vector<double> >* E, int atom,
                     double* x, double* xnew, double* y, double* ynew,
                     double* z, double* znew);
 
   // Files to write
-  ofstream RNG, RNG_pairs, start, at_e3, at_e4, at_e5, at_e6, Evals;       // output of random numbers
-  RNG.precision(9); RNG_pairs.precision(9); start.precision(9); Evals.precision(9);
-  at_e3.precision(9); at_e4.precision(9); at_e5.precision(9); at_e6.precision(9);
+  ofstream RNG, RNG_pairs, start, at_e3, at_e4, at_e5, at_e6, Evals, xyz;       // output of random numbers
+  RNG.precision(9); RNG_pairs.precision(9);
+  start.precision(9); Evals.precision(9); at_e3.precision(9);
+  at_e4.precision(9); at_e5.precision(9); at_e6.precision(9), xyz.precision(9);
   start.open("start.txt");
   at_e3.open("at_e3.txt"); at_e4.open("at_e4.txt");
   at_e5.open("at_e5.txt"); at_e6.open("at_e6.txt");
-  Evals.open("Evals.txt");
+  Evals.open("Evals.txt"); xyz.open("end.xyz");
 
-  
-  Ranq1 rng(17);    // Init RNG
+  // 100,000 random values
+  for(int i=1;i<100000;i++){
+    RNG << rng.doub()<< endl;
+  }
+  // 10,000 pairs of random values
+  int i = 10000;
+  while(i < 30000){
+    RNG_pairs << rng.doub() << setw(15);
+    i++;
+    RNG_pairs << rng.doub() << endl;
+    i++;
+  }
 
 
   double* x = new double[Na];
@@ -193,7 +205,7 @@ int main(){
   for(int i=0;i<10000000;i++){
 
     // select and update position of random atom
-    atom = rng.int32()%Na;
+    atom = (int) Na*rng.doub();
     cardinal = rng.doub();
     dir = rng.doub();
     amount = rng.doub();
@@ -226,7 +238,7 @@ int main(){
 
     // write file for 10000 iterations
     if(i == 10000){
-      cout<< "10000"<< endl;
+      cout<< "10,000 processed"<< endl;
       for(int i=0;i<Na;i++){
         at_e4 << x[i] << setw(20) << y[i] << setw(20) << z[i] << endl;
       }
@@ -234,10 +246,14 @@ int main(){
 
     // write file for 100000 iterations
     if(i == 100000){
-      cout<< "100000"<< endl;
+      cout<< "100,000 processed"<< endl;
       for(int i=0;i<Na;i++){
         at_e5 << x[i] << setw(20) << y[i] << setw(20) << z[i] << endl;
       }
+    }
+
+    if(i == 1000000){
+      cout<< "1,000,000 processed"<< endl;
     }
 
 
@@ -246,7 +262,7 @@ int main(){
     }
     
     
-    update_energy(rng, &E, atom, x, xnew, y, ynew, z, znew);
+    update_energy(&E, atom, x, xnew, y, ynew, z, znew);
 
 
     
@@ -257,6 +273,7 @@ int main(){
   // write file for 1000000 iterations
   for(int i=0;i<Na;i++){
     at_e6 << x[i] << setw(20) << y[i] << setw(20) << z[i] << endl;
+    xyz << "C  " << x[i] << setw(20) << y[i] << setw(20) << z[i] << endl;
   }
 
   
